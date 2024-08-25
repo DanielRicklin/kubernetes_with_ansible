@@ -1,0 +1,31 @@
+- name: Application Deployment
+  hosts: master
+  gather_facts: false
+
+  vars:
+    app: nginx
+
+  tasks:
+    - name: Delete a Deployment
+      kubernetes.core.k8s:
+        api_version: apps/v1
+        namespace: "{{ app }}-namespace"
+        kind: Deployment
+        name: "{{ app }}"
+        # delete_all: true
+        state: absent
+
+    - name: Delete Service
+      kubernetes.core.k8s:
+        state: absent
+        api_version: v1
+        kind: Service
+        namespace: "{{ app }}-namespace"
+        name: "{{ app }}-service"
+
+    - name: Delete K8S namespace
+      kubernetes.core.k8s:
+        name: "{{ app }}-namespace"
+        api_version: v1
+        kind: Namespace
+        state: absent

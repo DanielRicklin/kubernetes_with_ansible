@@ -1,0 +1,58 @@
+- name: Application Deployment
+  hosts: master
+  gather_facts: false
+
+  vars:
+    replicas: 3
+    app: nginx
+
+  tasks:
+    - name: Create K8S namespace
+      kubernetes.core.k8s:
+        name: "{{ app }}-namespace"
+        api_version: v1
+        kind: Namespace
+        state: present
+
+    - name: Create a Deployment
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "{{ app }}"
+            namespace: "{{ app }}-namespace"
+          spec:
+            replicas: "{{ replicas }}"
+            selector:
+              matchLabels:
+                app: "{{ app }}"
+            template:
+              metadata:
+                labels:
+                  app: "{{ app }}"
+              spec:
+                containers:
+                  - name: "{{ app }}-container"
+                    image: "{{ app }}:latest"
+                    ports:
+                      - containerPort: 80
+
+    - name: Expose Deployment as a Service
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: "{{ app }}-service"
+            namespace: "{{ app }}-namespace"
+          spec:
+            selector:
+              app: "{{ app }}"
+            ports:
+              - protocol: TCP
+                port: 80
+                targetPort: 80
+            type: LoadBalancer
+            externalIPs:
+            - 10.150.192.100
