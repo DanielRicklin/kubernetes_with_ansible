@@ -1,0 +1,11 @@
+- name: Application Deployment
+  hosts: master
+  gather_facts: false
+
+  tasks:
+    - name: Delete helm runner deployment
+      kubernetes.core.helm:
+        name: gitlab-runner
+        namespace: gitlab-runner
+        state: absent
+        wait: true

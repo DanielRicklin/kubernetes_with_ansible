@@ -1,0 +1,25 @@
+- name: Application Deployment
+  hosts: master
+  gather_facts: false
+
+  tasks:
+    - name: Ensure gitlab directory exists
+      file:
+        path: gitlab
+        state: directory
+
+    - name: Copy values.yaml file
+      ansible.builtin.copy:
+        src: values.yaml
+        dest: ./gitlab/values.yaml
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    - name: Install Gitlab runner Charts
+      kubernetes.core.helm:
+        name: gitlab-runner
+        namespace: gitlab-runner
+        chart_ref: gitlab/gitlab-runner
+        values_files:
+          - ./gitlab/values.yaml
